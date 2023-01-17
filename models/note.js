@@ -1,11 +1,15 @@
 const mongoose = require('mongoose')
 const url = process.env.MONGODB_URI
 
-
-console.log("connecting to", url)
-mongoose.connect(url)
-    .then((result) => console.log("connected to MongoDB"))
-    .catch((error) => console.error("error connecting to MongoDB:", error.message))
+const connectDB = async () => {
+    console.log("connecting to", url)
+    mongoose.connect(url)
+        .then((result) => console.log("connected to MongoDB"))
+        .catch((error) => {
+            console.error("error connecting to MongoDB:", error.message)
+            process.exit(1)
+        })
+}
 
 const noteSchema = new mongoose.Schema({
     content: String,
@@ -21,4 +25,5 @@ noteSchema.set('toJSON', {
     }
 })
 
-module.exports = mongoose.model('Note', noteSchema)
+module.exports.Note = mongoose.model('Note', noteSchema)
+module.exports.connectDB = connectDB

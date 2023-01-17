@@ -14,14 +14,14 @@ const requestLogger = (request, response, next) => {
   next()
 }
 app.use(requestLogger)
-const Note = require('./models/note')
+const noteModel = require('./models/note')
 
 app.get('/', (request, response) => {
   response.send('<h1>Hello world</h1>')
 })
 
 app.get('/api/notes', (request, response) => {
-  Note.find({}).then(notes => {
+  noteModel.Note.find({}).then(notes => {
     response.json(notes)
   })
 })
@@ -85,8 +85,11 @@ app.post('/api/notes', (request, response) => {
 })
 
 const PORT = process.env.PORT || 3001
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`)
+
+noteModel.connectDB().then(() => {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`)
+  })
 })
 
 app.use((request, response) => {
