@@ -27,43 +27,24 @@ app.get('/api/notes', (request, response) => {
 })
 
 app.get('/api/notes/:id', (request, response) => {
-  const id = +request.params.id
-  const note = notes.find(note => note.id === id)
-  response.status(note ? 200 : 404).json(note)
+  noteModel.Note.findById(request.params.id).then(note => {
+    response.status(note ? 200 : 404).json(note)
+  })
 })
 
-app.put('/api/notes/:id', (request, response) => {
-  const id = +request.params.id
+app.put('/api/notes/:id', async (request, response) => {
   const body = request.body
-  let note = notes.find(note => note.id === id)
-  if (!note) {
-    console.error(`no note with id ${id}`)
-    return response.status(404).end()
-  }
-  note = {
-    content: body.content,
-    important: body.important,
-    date: body.date,
-    id: body.id,
-  }
-  response.status(200).json(note)
+  noteModel.Note.findById(request.params.id).then(note => {
+    note.important = body.important
+    note.save()
+    response.status(note ? 200 : 404).json(note)
+  })
 })
 
 app.delete('/api/notes/:id', (request, response) => {
-  const id = +request.params.id
-  if (!notes.find(note => note.id === id)) {
-    return response.status(404).end()
-  }
-  notes = notes.filter(note => note.id !== id)
+  noteModel.Note.deleteOne({ _id: request.params.id })
   response.status(204).end()
 })
-
-const generateId = () => {
-  const maxId = notes.length > 0
-    ? Math.max(...notes.map(n => n.id))
-    : 0
-  return maxId + 1
-}
 
 app.post('/api/notes', (request, response) => {
   const body = request.body
@@ -74,14 +55,14 @@ app.post('/api/notes', (request, response) => {
     })
   }
 
-  const note = {
+  const note = new noteModel.Note({
     content: body.content,
     important: body.important || false,
     date: new Date(),
-    id: generateId(),
-  }
-  notes = notes.concat(note)
-  response.json(note)
+  })
+  note.save().then(savedNote => {
+    response.json(savedNote)
+  })
 })
 
 const PORT = process.env.PORT || 3001
