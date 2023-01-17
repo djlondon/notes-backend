@@ -3,6 +3,7 @@ const cors = require('cors')
 const app = express()
 app.use(express.json())
 app.use(cors())
+app.use(express.static('build'))
 const requestLogger = (request, response, next) => {
   console.log('Method:', request.method)
   console.log('Path:', request.path)
@@ -51,11 +52,19 @@ app.get('/api/notes/:id', (request, response) => {
 
 app.put('/api/notes/:id', (request, response) => {
   const id = +request.params.id
-  if (!notes.find(note => note.id === id)) {
+  const body = request.body
+  let note = notes.find(note => note.id === id)
+  if (!note) {
+    console.error(`no note with id ${id}`)
     return response.status(404).end()
   }
-  notes = notes.filter(note => note.id !== id)
-  response.status(204).end()
+  note = {
+    content: body.content,
+    important: body.important,
+    date: body.date,
+    id: body.id,
+  }
+  response.status(200).json(note)
 })
 
 app.delete('/api/notes/:id', (request, response) => {
@@ -93,7 +102,7 @@ app.post('/api/notes', (request, response) => {
   response.json(note)
 })
 
-const PORT = 3001
+const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
 })
